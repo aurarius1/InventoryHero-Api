@@ -1,6 +1,5 @@
 echo "creating user $PUID:$PGID"
-groupmod -g "$PGID" -o iventoryhero
-usermod -u "$PUID" -o iventoryhero
-chown -R iventoryhero:iventoryhero ./files/
-chown vikunja:vikunja .
-exec su vikunja -c /app/vikunja/vikunja "$@"
+addgroup -g "$PGID" inventoryhero
+adduser -u "$PUID" -D inventoryhero -G inventoryhero
+chown -R inventoryhero:inventoryhero /app
+exec su inventoryhero -c "gunicorn --bind 0.0.0.0:5000 app:app"

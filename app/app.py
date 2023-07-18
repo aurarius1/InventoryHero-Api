@@ -1,11 +1,11 @@
 from flask import Flask
 import os
 
-app = Flask(__name__)
+from endpoints.HelloWorld import HelloWorld
 
-@app.route("/")
-def hello_world():
-    return "Hello, World!"
+app = Flask(__name__)
+helloworld = HelloWorld('hello_world', __name__, app=app, url_prefix="/api/v1")
+app.register_blueprint(helloworld)
 
 
 if __name__ == "__main__":

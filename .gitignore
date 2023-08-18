@@ -123,3 +123,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 /docker-compose.dev.yml
+/dev/
+/app/flask_session/

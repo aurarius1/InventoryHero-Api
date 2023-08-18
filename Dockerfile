@@ -1,9 +1,15 @@
 FROM python:3.11-alpine
 LABEL authors="codewizards"
 
+
+
+
 WORKDIR /app
 COPY requirements.txt /app/requirements.txt
-RUN pip install -r requirements.txt
+RUN apk add --no-cache --virtual build-deps gcc musl-dev pkgconf mariadb-dev && \
+    apk add --no-cache mariadb-connector-c-dev && \
+    pip install --no-cache-dir -r requirements.txt && \
+    apk del build-deps
 
 ENV PUID 1000
 ENV PGID 1000

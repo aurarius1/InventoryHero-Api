@@ -97,7 +97,7 @@ class User(Blueprint):
             if not pw_valid:
                 return {"status": "username or password invalid"}, 500
             session["username"] = user.username
-            return {}, 200
+            return {"username": user.username}, 200
 
         @self.route("/logout", methods=["GET"])
         def logout():

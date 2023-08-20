@@ -117,12 +117,7 @@ class ProductEndpoint(Blueprint):
             result = []
 
             for product in products:
-                tmp_product = product.serialize()
-                self.app.logger.info("HI")
-                self.app.logger.info(product.mappings)
-                self.app.logger.info("BYE")
                 mappings = product.mappings
-
                 if box_id is not None:
                     mappings = [mapping for mapping in mappings if mapping.box_id == box_id]
                 elif location_id is not None:
@@ -131,8 +126,7 @@ class ProductEndpoint(Blueprint):
                 if len(mappings) == 0:
                     continue
                 storage_locations = [storage_location.serialize() for storage_location in mappings]
-                tmp_product["storage_locations"] = storage_locations
-                result.append(tmp_product)
+                result.extend(storage_locations)
             self.app.logger.info(result)
             return jsonify(result), 200
 

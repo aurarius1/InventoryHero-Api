@@ -47,5 +47,6 @@ class ProductContainerMapping(db.Model):
             "box": self.box,
             "location": self.location,
             "amount": self.amount,
-            "updated_at": self.updated_at
+            "updated_at": self.updated_at,
+            "product": self.product
         }

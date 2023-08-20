@@ -1,5 +1,5 @@
 import sqlalchemy.exc
-from flask import Blueprint, request, session
+from flask import Blueprint, request, session, jsonify
 from models.User import User as ApplicationUser, Household, HouseholdMembers
 from decorators import authorize
 import bcrypt
@@ -97,7 +97,12 @@ class User(Blueprint):
             if not pw_valid:
                 return {"status": "username or password invalid"}, 500
             session["username"] = user.username
-            return {"username": user.username}, 200
+            household = HouseholdMembers.query.filter_by(member_id=user.id).first()
+            return {
+                "username": user.username,
+                "email": user.email,
+                "household": household.household.to_dict() if household is not None else None
+            }, 200
 
         @self.route("/logout", methods=["GET"])
         def logout():
@@ -107,7 +112,22 @@ class User(Blueprint):
             session.pop("username")
             return {}, 200
 
-        @self.route("/userpage", methods=["GET"])
+        @self.route("/user_info", methods=["GET"])
         @authorize
         def userpage():
-            return {'username': session.get('username')}
+            user = ApplicationUser.query.filter_by(username=session.get('username')).first()
+            if user is not None:
+                return jsonify(user), 200
+            return {"status": "error fetching user from db"}, 500
+
+        @self.route("/households", methods=["GET"])
+        @authorize
+        def get_households():
+            user = ApplicationUser.query.filter_by(username=session.get("username")).first()
+            households = HouseholdMembers.query.filter_by(member_id=user.id).all()
+            if households is None:
+                return {"status": "user has no households, please create one"}, 204
+
+            households = [household.household for household in households]
+            return jsonify(households), 200
+

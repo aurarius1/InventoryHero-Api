@@ -78,6 +78,7 @@ class ProductEndpoint(Blueprint):
         @authorize
         def get_products():
             box_id = request.args.get('box', None)
+
             location_id = request.args.get('location', None)
             household_id = request.args.get('household', None)
             get_starred = request.args.get("starred", None)
@@ -98,11 +99,22 @@ class ProductEndpoint(Blueprint):
 
             if box_id is not None:
                 self.app.logger.info("LISTING PRODUCTS IN BOX")
+                try:
+                    box_id = int(box_id)
+                except ValueError as e:
+                    self.app.logger.error(e)
+                    return {"status": "invalid_box_id"}, 400
+                self.app.logger.info(box_id)
                 box = Box.query.filter_by(id=box_id, household_id=household_id).first()
                 if box is None:
-                    return {"status": "Box does not belong to your household"}, 400
+                    return {"status": "box_not_found"}, 400
             elif location_id is not None:
                 self.app.logger.info("LISTING PRODUCTS IN LOCATION")
+                try:
+                    location_id = int(location_id)
+                except ValueError as e:
+                    self.app.logger.error(e)
+                    return {"status": "invalid_location_id"}, 400
                 location = Location.query.filter_by(id=location_id, household_id=household_id).first()
                 if location is None:
                     return {"status": "location does not belong to your household"}, 400
@@ -115,9 +127,10 @@ class ProductEndpoint(Blueprint):
 
             products = products.all()
             result = []
-
+            self.app.logger.info(products)
             for product in products:
                 mappings = product.mappings
+                self.app.logger.info(mappings)
                 if box_id is not None:
                     mappings = [mapping for mapping in mappings if mapping.box_id == box_id]
                 elif location_id is not None:
@@ -207,10 +220,10 @@ class ProductEndpoint(Blueprint):
                 starred = string_to_bool(starred)
                 product_entry.starred = starred
 
-            product_name = data.pop("name", None)
+            name = data.pop("name", None)
             if name is not None:
-                product_entry.name = product_name
-
+                product_entry.name = name
+            self.app.logger.info(product_entry)
             self.db.session.commit()
             if mapping_entry is None:
 
@@ -255,7 +268,7 @@ class ProductEndpoint(Blueprint):
                 mapping_entry.updated_at = datetime.datetime.utcnow()
                 self.db.session.commit()
 
-            return ret
+            return mapping_entry.serialize(), 200
 
         @self.route("/delete_product", methods=["DELETE"])
         @authorize

@@ -84,7 +84,7 @@ class StorageEndpoint(Blueprint):
                 self.app.logger.error(e)
                 return {"status": "no valid storage type is given"}, 402
 
-            household_id = request.args.get("household_id", None)
+            household_id = request.args.get("household", None)
             if household_id is None:
                 return {"status": "no household is given"}, 400
             try:
@@ -98,17 +98,38 @@ class StorageEndpoint(Blueprint):
                 return {"status": "user does not belong to given household / household does not exist"}, 400
 
             if storage_type == ContainerTypes.Box:
-                storage_container = Box.query.filter_by(household_id=household_id).all()
+                location_id = request.args.get("location", None)
+                query = Box.query.filter_by(household_id=household_id)
+                if location_id is not None:
+                    try:
+                        location_id = int(location_id)
+                    except ValueError as e:
+                        self.app.logger.error(e)
+                        return {"status": "invalid_box_id"}, 400
+                    query = query.filter_by(location_id=location_id)
+                storage_container = query.all()
                 if storage_container is None:
                     return {"status": "invalid box id given"}, 400
+
             elif storage_type == ContainerTypes.Location:
                 storage_container = Location.query.filter_by(household_id=household_id).all()
                 if storage_container is None:
                     return {"status": "invalid room id given"}, 400
+
             else:
                 return {"status": "no valid storage type is given"}, 400
 
-            return jsonify(storage_container), 200
+            result = []
+            for container in storage_container:
+                result.append(container.serialize())
+                result[-1]["products"] = len(container.product_mappings)
+                if storage_type == ContainerTypes.Location:
+                    result[-1]["boxes"] = len(container.boxes)
+                elif storage_type == ContainerTypes.Box:
+                    result[-1]["starred_products"] = (
+                        len([mapping for mapping in container.product_mappings if mapping.product.starred]))
+
+            return result, 200
 
         @self.route("/add_storage", methods=["POST"])
         @authorize
@@ -300,3 +321,4 @@ class StorageEndpoint(Blueprint):
             self.db.session.commit()
 
             return {}, 200
+

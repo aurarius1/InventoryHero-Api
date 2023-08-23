@@ -20,7 +20,12 @@ class Location(db.Model):
 
     boxes = db.relationship("Box", back_populates="location")
     product_mappings = db.relationship("ProductContainerMapping", back_populates="location")
-
+    def serialize(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "household_id": self.household_id
+        }
 
 @dataclass
 class Box(db.Model):
@@ -33,6 +38,15 @@ class Box(db.Model):
 
     product_mappings = db.relationship("ProductContainerMapping", back_populates="box")
     location: Mapped[Location] = db.relationship("Location", back_populates="boxes")
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "location": self.location.serialize() if self.location is not None else None,
+            "household_id": self.household_id
+        }
+
 
 
 

@@ -24,7 +24,8 @@ class Location(db.Model):
         return {
             "id": self.id,
             "name": self.name,
-            "household_id": self.household_id
+            "household_id": self.household_id,
+            "creation_date": self.creation_date
         }
 
 @dataclass
@@ -44,7 +45,8 @@ class Box(db.Model):
             "id": self.id,
             "name": self.name,
             "location": self.location.serialize() if self.location is not None else None,
-            "household_id": self.household_id
+            "household_id": self.household_id,
+            "creation_date": self.creation_date
         }
 
 

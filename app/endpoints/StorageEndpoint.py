@@ -204,7 +204,7 @@ class StorageEndpoint(Blueprint):
         def update_storage():
             data = dict(request.form)
             storage_type = data.pop("type", None)
-
+            self.app.logger.info(storage_type)
             username = session.get("username", None)
             self.app.logger.info(username)
             user, ret = get_user_from_db(username)
@@ -218,6 +218,7 @@ class StorageEndpoint(Blueprint):
                 storage_type = ContainerTypes(int(storage_type))
             except ValueError as e:
                 self.app.logger.error(e)
+                self.app.logger.info("its me");
                 return {"status": "no valid storage type is given"}, 400
 
             storage_id = data.pop("storage", None)
@@ -228,6 +229,7 @@ class StorageEndpoint(Blueprint):
                 storage_id = int(storage_id)
             except ValueError as e:
                 self.app.logger.error(e)
+                self.app.logger.info("HALLO")
                 return {"status": "invalid storage given"}, 400
 
             if storage_type == ContainerTypes.Box:
@@ -235,10 +237,11 @@ class StorageEndpoint(Blueprint):
             elif storage_type == ContainerTypes.Location:
                 container = Location.query.filter_by(id=storage_id).first()
             else:
+                self.app.logger.info(storage_type)
                 return {"status": "invalid storage type"}, 400
 
             if container is None:
-                return {"status": "invalid storage type"}, 400
+                return {"status": "storage not found"}, 400
 
             in_household, _ = user_in_household(user.id, container.household_id)
             if not in_household:
@@ -271,7 +274,7 @@ class StorageEndpoint(Blueprint):
                     container.location_id = new_location
 
             self.db.session.commit()
-            return {}, 200
+            return container.serialize(), 200
 
         @self.route("/delete_storage", methods=["DELETE"])
         @authorize

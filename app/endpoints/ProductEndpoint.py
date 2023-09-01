@@ -72,7 +72,10 @@ class ProductEndpoint(Blueprint):
             self.db.session.commit()
             self.app.logger.info(f"Product: {product_name} with amount: {amount} successfully created, "
                                  f"at box: {box_id}/location: {location_id}")
-            return {}, 200
+
+            created_product = ProductContainerMapping.query.filter_by(id=production_at_container.id).first()
+
+            return jsonify(created_product.serialize()), 200
 
         @self.route("/get_products", methods=["GET"])
         @authorize

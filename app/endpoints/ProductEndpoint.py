@@ -86,7 +86,8 @@ class ProductEndpoint(Blueprint):
             household_id = request.args.get('household', None)
             get_starred = request.args.get("starred", None)
             product_id = request.args.get("product", None)
-
+            only_product = string_to_bool(request.args.get("product_only", "false"))
+            self.app.logger.info(only_product)
             username = session.get("username", None)
             self.app.logger.info(username)
             user, ret = get_user_from_db(username)
@@ -129,6 +130,10 @@ class ProductEndpoint(Blueprint):
                 products = products.filter(Product.id == product_id)
 
             products = products.all()
+
+            if only_product:
+                return jsonify(products), 200
+
             result = []
             self.app.logger.info(products)
             for product in products:

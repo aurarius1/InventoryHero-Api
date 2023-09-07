@@ -188,16 +188,20 @@ class StorageEndpoint(Blueprint):
 
                 new_box = Box(name=storage_name, household_id=household_id, location_id=location_id)
                 self.db.session.add(new_box)
+                self.db.session.commit()
+                new_storage = Box.query.filter_by(id=new_box.id).first()
             elif storage_type == ContainerTypes.Location:
                 unique = Location.query.filter_by(household_id=household_id, name=storage_name).first() is None
                 if not unique:
                     return {"status": "name needs to be unique within your household"}, 400
                 new_location = Location(name=storage_name, household_id=household_id)
                 self.db.session.add(new_location)
+                self.db.session.commit()
+                new_storage = Location.query.filter_by(id=new_location.id).first()
             else:
                 return {"status": "no valid storage type is given"}, 400
-            self.db.session.commit()
-            return {}, 200
+
+            return jsonify(new_storage.serialize()), 200
 
         @self.route("/update_storage", methods=["POST"])
         @authorize
